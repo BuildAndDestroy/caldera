@@ -63,6 +63,7 @@ from app.api.v2.responses import apispec_request_validation_middleware
 from app.api.rest_api import RestApi
 
 from app import version
+from tests import AsyncMock
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_DIR = os.path.join(DIR, '..', 'conf')
