@@ -32,12 +32,18 @@ RUN sed -i 's#bind\ \*\:8443\ ssl\ crt\ plugins/ssl/conf/insecure_certificate.pe
 # Enable ssl plugin
 RUN sed -i '/^\-\ manx/a \-\ ssl' conf/default.yml
 
+# Enable emu
+#RUN sed -i '/^\-\ ssl/a \-\ emu' conf/default.yml
+
 # Install pip requirements
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Set up config file and disable atomic by default
 RUN python3 -c "import app; import app.utility.config_generator; app.utility.config_generator.ensure_local_config();"; \
     sed -i '/\- atomic/d' conf/local.yml;
+
+# Copy default.yml to local.yml or none of these changes above will stick
+RUN cp conf/default.yml conf/local.yml
 
 # Install golang
 RUN curl -L https://go.dev/dl/go1.17.6.linux-amd64.tar.gz -o go1.17.6.linux-amd64.tar.gz
