@@ -178,10 +178,11 @@ def op_without_learning_parser(ability, adversary):
 
 
 @pytest.fixture
-def custom_agent(test_agent):
-    def _make_agent(executors, platform='windows', trusted=True):
+def custom_agent(test_agent, test_executor):
+    def _make_agent(platform='windows', trusted=True, executor_name='psh'):
+        test_executor.name = executor_name
         test_agent.platform = platform
-        test_agent.executors = executors
+        test_agent.executors = [test_executor.name]
         test_agent.trusted = trusted
         return test_agent
     return _make_agent
