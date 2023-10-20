@@ -178,6 +178,17 @@ def op_without_learning_parser(ability, adversary):
 
 
 @pytest.fixture
+def custom_agent(test_agent, test_executor):
+    def _make_agent(platform='windows', trusted=True, executor_name='psh'):
+        test_executor.name = executor_name
+        test_agent.platform = platform
+        test_agent.executors = [test_executor.name]
+        test_agent.trusted = trusted
+        return test_agent
+    return _make_agent
+
+
+@pytest.fixture
 def op_with_learning_and_seeded(ability, adversary, operation_agent, parse_datestring):
     sc = Source(id='3124', name='test', facts=[Fact(trait='domain.user.name', value='bob')])
     op = Operation(id='6789', name='testC', agents=[], adversary=adversary, source=sc, use_learning_parsers=True)

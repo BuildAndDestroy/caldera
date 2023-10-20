@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:23.04
 SHELL ["/bin/bash", "-c"]
 
 ARG TZ="UTC"
@@ -12,11 +12,34 @@ ADD . .
 RUN if [ -z "$(ls plugins/stockpile)" ]; then echo "stockpile plugin not downloaded - please ensure you recursively cloned the caldera git repository and try again."; exit 1; fi
 
 RUN apt-get update && \
-    apt-get -y install python3 python3-pip git curl
+    apt-get -y install python3 python3-pip python3-venv git curl golang-go
+
 
 #WIN_BUILD is used to enable windows build in sandcat plugin
 ARG WIN_BUILD=false
 RUN if [ "$WIN_BUILD" = "true" ] ; then apt-get -y install mingw-w64; fi
+
+# Set up python virtualenv
+ENV VIRTUAL_ENV=/opt/venv/caldera
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# haproxy is needed for the ssl plugin
+RUN apt-get install haproxy -y
+
+# Generate self signed certificate
+RUN openssl req -x509 -newkey rsa:4096  -out conf/certificate.pem -keyout conf/certificate.pem -subj "/C=US/ST=VA/L=McLean/O=Mitre/OU=IT/CN=mycaldera.caldera" -nodes
+RUN mv conf/certificate.pem plugins/ssl/conf/certificate.pem
+
+# Enable Self Signed Certificate within haproxy
+RUN cp plugins/ssl/templates/haproxy.conf conf/
+RUN sed -i 's#bind\ \*\:8443\ ssl\ crt\ plugins/ssl/conf/insecure_certificate.pem#bind\ \*\:8443\ ssl\ crt\ plugins/ssl/conf/certificate.pem#g' conf/haproxy.conf
+
+# Enable ssl plugin
+RUN sed -i '/^\-\ manx/a \-\ ssl' conf/default.yml
+
+# Enable emu
+#RUN sed -i '/^\-\ ssl/a \-\ emu' conf/default.yml
 
 # haproxy is needed for the ssl plugin
 RUN apt-get install haproxy -y
@@ -52,6 +75,11 @@ ENV PATH="${PATH}:/usr/local/go/bin"
 RUN go version;
 
 # Compile default sandcat agent binaries, which will download basic golang dependencies.
+
+# Install Go dependencies
+WORKDIR /usr/src/app/plugins/sandcat/gocat
+RUN go mod tidy && go mod download
+
 WORKDIR /usr/src/app/plugins/sandcat
 
 # Fix line ending error that can be caused by cloning the project in a Windows environment
