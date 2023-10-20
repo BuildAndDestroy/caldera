@@ -50,6 +50,9 @@ RUN sed -i 's#bind\ \*\:8443\ ssl\ crt\ plugins/ssl/conf/insecure_certificate.pe
 # Enable ssl plugin
 RUN sed -i '/^\-\ manx/a \-\ ssl' conf/default.yml
 
+# Enable emu
+#RUN sed -i '/^\-\ ssl/a \-\ emu' conf/default.yml
+
 # Install pip requirements
 RUN pip3 install --no-cache-dir -r requirements.txt
 
