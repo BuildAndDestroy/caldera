@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:23.04
 SHELL ["/bin/bash", "-c"]
 
 ARG TZ="UTC"
@@ -12,7 +12,8 @@ ADD . .
 RUN if [ -z "$(ls plugins/stockpile)" ]; then echo "stockpile plugin not downloaded - please ensure you recursively cloned the caldera git repository and try again."; exit 1; fi
 
 RUN apt-get update && \
-    apt-get -y install python3 python3-pip git curl golang-go
+    apt-get -y install python3 python3-pip python3-venv git curl golang-go
+
 
 #WIN_BUILD is used to enable windows build in sandcat plugin
 ARG WIN_BUILD=false
@@ -52,6 +53,11 @@ ENV PATH="${PATH}:/usr/local/go/bin"
 RUN go version;
 
 # Compile default sandcat agent binaries, which will download basic golang dependencies.
+
+# Install Go dependencies
+WORKDIR /usr/src/app/plugins/sandcat/gocat
+RUN go mod tidy && go mod download
+
 WORKDIR /usr/src/app/plugins/sandcat
 
 # Fix line ending error that can be caused by cloning the project in a Windows environment
