@@ -12,7 +12,7 @@ ADD . .
 RUN if [ -z "$(ls plugins/stockpile)" ]; then echo "stockpile plugin not downloaded - please ensure you recursively cloned the caldera git repository and try again."; exit 1; fi
 
 RUN apt-get update && \
-    apt-get -y install python3 python3-pip git curl
+    apt-get -y install python3 python3-pip git curl golang-go
 
 #WIN_BUILD is used to enable windows build in sandcat plugin
 ARG WIN_BUILD=false
