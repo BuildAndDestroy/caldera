@@ -331,7 +331,7 @@ def agent_config():
 
 
 @pytest.fixture
-async def api_v2_client(event_loop, aiohttp_client, contact_svc):
+async def api_v2_client(event_loop, aiohttp_client):
     def make_app(svcs):
         warnings.filterwarnings(
             "ignore",
@@ -357,6 +357,7 @@ async def api_v2_client(event_loop, aiohttp_client, contact_svc):
         PlannerApi(svcs).add_routes(app)
         HealthApi(svcs).add_routes(app)
         ScheduleApi(svcs).add_routes(app)
+
         return app
 
     async def initialize():
@@ -373,11 +374,12 @@ async def api_v2_client(event_loop, aiohttp_client, contact_svc):
         auth_svc = AuthService()
         _ = FileSvc()
         _ = EventService()
+        _ = KnowledgeService()
+        _ = ContactService()
         services = app_svc.get_services()
         os.chdir(str(Path(__file__).parents[1]))
 
         _ = await RestApi(services).enable()
-        await app_svc.register_contacts()
         await auth_svc.apply(app_svc.application, auth_svc.get_config('users'))
         await auth_svc.set_login_handlers(services)
 
@@ -390,6 +392,7 @@ async def api_v2_client(event_loop, aiohttp_client, contact_svc):
             url='/api/docs/swagger.json',
             static_path='/static/swagger'
         )
+
         app_svc.application.middlewares.append(apispec_request_validation_middleware)
         app_svc.application.middlewares.append(validation_middleware)
         return app_svc
