@@ -31,10 +31,14 @@ class InvalidOperationStateError(Exception):
 
 
 class OperationOutputRequestSchema(ma.Schema):
-    enable_agent_output = ma.fields.Boolean(default=False)
+    enable_agent_output = ma.fields.Boolean(dump_default=False)
 
 
 class OperationSchema(ma.Schema):
+
+    class Meta:
+        unknown = ma.EXCLUDE
+
     id = ma.fields.String()
     name = ma.fields.String(required=True)
     host_group = ma.fields.List(ma.fields.Nested(AgentSchema()), attribute='agents', dump_only=True)
@@ -64,6 +68,23 @@ class OperationSchema(ma.Schema):
     @ma.post_load
     def build_operation(self, data, **kwargs):
         return None if kwargs.get('partial') is True else Operation(**data)
+
+
+class HostSchema(ma.Schema):
+    display_name = ma.fields.String(dump_only=True)
+    host = ma.fields.String()
+    host_ip_addrs = ma.fields.List(ma.fields.String(), allow_none=True)
+    platform = ma.fields.String()
+    reachable_hosts = ma.fields.List(ma.fields.String(), allow_none=True)
+
+
+class OperationSchemaAlt(OperationSchema):
+    chain = property(lambda: AttributeError)
+    host_group = property(lambda: AttributeError)
+    source = property(lambda: AttributeError)
+    visibility = property(lambda: AttributeError)
+    agents = ma.fields.Dict(keys=ma.fields.String(), values=ma.fields.Nested(AgentSchema()))
+    hosts = ma.fields.Dict(keys=ma.fields.String(), values=ma.fields.Nested(HostSchema()))
 
 
 class Operation(FirstClassObjectInterface, BaseObject):
